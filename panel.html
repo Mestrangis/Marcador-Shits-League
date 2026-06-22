@@ -277,7 +277,7 @@ input[type="number"]:focus { outline: 1px solid #87CEEB; }
 </div>
 
 <script type="module">
-import { publicarEstado, onEstadoActualizado, publicarComandoCrono, onComandoCrono, onConexionCambiada, onSolicitudEstado } from './sync.js';
+import { publicarEstado, leerEstado, onEstadoActualizado, publicarComandoCrono, onComandoCrono, onConexionCambiada, onSolicitudEstado, solicitarEstado } from './sync.js';
 
 // ============================================================
 //  ABRIR OVERLAY
@@ -421,9 +421,11 @@ function iniciarDisplayLocal() {
 function enviarComando(accion, segundosEnPausa, configOverride) {
     const config = configOverride || (comandoCrono ? comandoCrono.config : leerConfig());
     comandoCrono = { accion, tsReferencia: Date.now(), segundosEnPausa, config };
-    publicarComandoCrono(comandoCrono);
     iniciarDisplayLocal();
-    publicarEstadoCompleto();
+    if (bootstrapCompleto) {
+        publicarComandoCrono(comandoCrono);
+        publicarEstadoCompleto();
+    }
 }
 
 function aplicarComandoCronoLocal(cmd) {
@@ -475,9 +477,11 @@ function actualizarMonitorMarcador() {
 //  PUBLICAR ESTADO (sin tiempo - el crono va por comandos)
 // ============================================================
 let aplicandoRemoto = false;
+let bootstrapCompleto = false;
+let resolverBootstrap = null;
 
 function publicarEstadoCompleto(videoEvento) {
-    if (aplicandoRemoto) return;
+    if (aplicandoRemoto || !bootstrapCompleto) return;
 
     const config = comandoCrono ? comandoCrono.config : leerConfig();
     const estado = {
@@ -551,6 +555,8 @@ function aplicarEstadoRemoto(estado) {
     }
 
     aplicandoRemoto = false;
+
+    if (resolverBootstrap) resolverBootstrap();
 }
 
 onEstadoActualizado(aplicarEstadoRemoto);
@@ -752,18 +758,49 @@ const indicador = document.getElementById('indicador-conexion');
 const indicadorTexto = indicador.querySelector('.texto');
 
 onConexionCambiada((st) => {
-    if (st === 'connected') { indicador.classList.add('conectado'); indicadorTexto.textContent = 'Conectado'; }
-    else { indicador.classList.remove('conectado'); indicadorTexto.textContent = ({ connecting:'Conectando...', disconnected:'Desconectado', suspended:'Suspendido', closed:'Cerrado', failed:'Error' })[st] || st; }
+    if (st === 'connected') {
+        indicador.classList.add('conectado');
+        indicadorTexto.textContent = 'Conectado';
+        solicitarEstado();
+    } else {
+        indicador.classList.remove('conectado');
+        indicadorTexto.textContent = ({ connecting:'Conectando...', disconnected:'Desconectado', suspended:'Suspendido', closed:'Cerrado', failed:'Error' })[st] || st;
+    }
 });
 
 onSolicitudEstado(() => publicarEstadoCompleto());
 
 // ============================================================
-//  INICIO
+//  INICIO (bootstrap con recuperación de estado)
 // ============================================================
-cargarJugadores().then(() => {
-    enviarComando('configurar', 0, leerConfig());
-});
+async function iniciar() {
+    await cargarJugadores();
+
+    // 1. Restaurar estado local (inmediato, sin publicar)
+    const estadoLocal = leerEstado();
+    if (estadoLocal) {
+        aplicarEstadoRemoto(estadoLocal);
+    }
+
+    // 2. Esperar hasta 2s por estado remoto (más actualizado)
+    await new Promise(resolve => {
+        let resuelto = false;
+        resolverBootstrap = () => { if (!resuelto) { resuelto = true; resolve(); } };
+        setTimeout(resolverBootstrap, 2000);
+    });
+    resolverBootstrap = null;
+
+    // 3. Bootstrap completo — empezar a publicar
+    bootstrapCompleto = true;
+
+    if (!comandoCrono && !estadoLocal) {
+        enviarComando('configurar', 0, leerConfig());
+    } else {
+        publicarEstadoCompleto();
+    }
+}
+
+iniciar();
 </script>
 </body>
 </html>
