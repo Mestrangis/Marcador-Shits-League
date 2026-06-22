@@ -1,4 +1,18 @@
 {
+  "_documentacion": {
+    "descripcion": "Base de datos de jugadores para el marcador deportivo.",
+    "campos_raiz": {
+      "videoCelebracionDefault": "URL (string o null) del vídeo que se reproduce al marcar gol si el jugador no tiene uno propio. Si es null, se usa assets/videos/default.mp4."
+    },
+    "campos_jugador": {
+      "nombreCorto": "(OBLIGATORIO) Nombre en mayúsculas que se muestra en el marcador y en los botones del panel. Ej: 'MARCOS'.",
+      "nombreCompleto": "(OBLIGATORIO) Nombre completo del jugador. Se usa internamente. Ej: 'Marcos'.",
+      "equipo": "(OPCIONAL) Equipo preasignado. Valores: 'LOCAL', 'VISITANTE', 'SIN_ASIGNAR'. Por defecto 'SIN_ASIGNAR'. Se puede cambiar desde el panel durante el partido.",
+      "videoCelebracion": "(OPCIONAL) URL completa al vídeo de celebración personal (ej: Cloudinary). Si es null o se omite, usa videoCelebracionDefault."
+    },
+    "como_anadir_jugador": "Copia un bloque {...} dentro del array 'jugadores', rellena nombreCorto y nombreCompleto como mínimo. Los demás campos son opcionales."
+  },
+
   "videoCelebracionDefault": null,
   "jugadores": [
     {

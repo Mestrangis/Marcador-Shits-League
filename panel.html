@@ -222,19 +222,32 @@ input[type="number"]:focus { outline: 1px solid #87CEEB; }
     list-style: none;
     background: #0f3460;
     border-radius: 5px;
-    min-height: 150px;
+    min-height: 120px;
     max-height: 250px;
     overflow-y: auto;
     padding: 5px;
+    transition: background 0.2s;
+}
+.modal-lista ul.drag-over {
+    background: #1a4a80;
+    outline: 2px dashed #87CEEB;
+    outline-offset: -2px;
 }
 .modal-lista li {
-    padding: 6px 10px;
+    padding: 10px 12px;
     cursor: pointer;
-    border-radius: 3px;
-    font-size: 13px;
+    border-radius: 4px;
+    font-size: 14px;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background 0.15s;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
 }
 .modal-lista li:hover { background: rgba(255,255,255,0.1); }
 .modal-lista li.selected { background: #533483; }
+.modal-lista li.dragging { opacity: 0.4; }
 
 .modal-acciones {
     display: flex;
@@ -244,10 +257,11 @@ input[type="number"]:focus { outline: 1px solid #87CEEB; }
     min-width: 120px;
 }
 .modal-acciones button {
-    font-size: 12px;
-    padding: 8px;
+    font-size: 13px;
+    padding: 10px 8px;
     background: #333;
     color: #ddd;
+    min-height: 42px;
 }
 
 .modal-footer {
@@ -258,6 +272,26 @@ input[type="number"]:focus { outline: 1px solid #87CEEB; }
 }
 .btn-nuevo-jugador { background: #4caf50; color: #fff; }
 .btn-cerrar-modal { background: #555; color: #fff; }
+
+@media (max-width: 600px) {
+    .modal-listas {
+        flex-direction: column;
+    }
+    .modal-acciones {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        min-width: 0;
+    }
+    .modal-acciones button {
+        flex: 1;
+        min-width: 80px;
+    }
+    .modal-lista ul {
+        min-height: 80px;
+        max-height: 180px;
+    }
+}
 
 /* --- MODAL SELECTOR GOL --- */
 .selector-overlay {
@@ -389,6 +423,15 @@ input[type="number"]:focus { outline: 1px solid #87CEEB; }
         <button class="btn-gestion" id="btn-gestionar">&#9881; GESTIONAR VERDE / NEGRO</button>
     </div>
 
+    <!-- COLOR MARCADOR -->
+    <div class="seccion">
+        <div class="seccion-titulo">Color del marcador</div>
+        <div class="radio-group">
+            <label><input type="radio" name="color-marcador" value="white" checked> Blanco</label>
+            <label><input type="radio" name="color-marcador" value="black"> Negro</label>
+        </div>
+    </div>
+
     <!-- CONFIGURACIÓN TIEMPO -->
     <div class="seccion">
         <div class="seccion-titulo">Configuraci&oacute;n de tiempo</div>
@@ -472,7 +515,7 @@ input[type="number"]:focus { outline: 1px solid #87CEEB; }
         <div class="modal-listas">
             <div class="modal-lista">
                 <h4>Sin Asignar</h4>
-                <ul id="lista-sin-asignar"></ul>
+                <ul id="lista-sin-asignar" data-equipo="SIN_ASIGNAR"></ul>
             </div>
             <div class="modal-acciones">
                 <button id="btn-a-verde">&#10145; A VERDE</button>
@@ -481,11 +524,11 @@ input[type="number"]:focus { outline: 1px solid #87CEEB; }
             </div>
             <div class="modal-lista">
                 <h4>VERDE (Local)</h4>
-                <ul id="lista-local"></ul>
+                <ul id="lista-local" data-equipo="LOCAL"></ul>
             </div>
             <div class="modal-lista">
                 <h4>NEGRO (Visitante)</h4>
-                <ul id="lista-visitante"></ul>
+                <ul id="lista-visitante" data-equipo="VISITANTE"></ul>
             </div>
         </div>
         <div class="modal-footer">
@@ -505,7 +548,7 @@ input[type="number"]:focus { outline: 1px solid #87CEEB; }
 </div>
 
 <script type="module">
-import { publicarEstado, onConexionCambiada, onSolicitudEstado } from './sync.js';
+import { publicarEstado, onEstadoActualizado, onConexionCambiada, onSolicitudEstado } from './sync.js';
 
 // ============================================================
 //  ABRIR OVERLAY
@@ -535,9 +578,8 @@ sliderIds.forEach((id, i) => {
 
 document.getElementById('btn-restablecer-pantalla').addEventListener('click', () => {
     pantallaConfig = { offsetX: 0, offsetY: 0, ancho: 0, alto: 0 };
-    sliderIds.forEach((id, i) => {
-        const slider = document.getElementById(id);
-        slider.value = 0;
+    sliderIds.forEach((id) => {
+        document.getElementById(id).value = 0;
         document.getElementById(id + '-val').textContent = '0';
     });
     actualizarTodo();
@@ -581,6 +623,8 @@ let ordenDisplayVisitante = [];
 
 const MAX_GOLEADORES = 5;
 
+let colorMarcador = 'white';
+
 // ============================================================
 //  CRONÓMETRO
 // ============================================================
@@ -603,12 +647,17 @@ const spinParte = document.getElementById('spin-parte');
 // ============================================================
 //  SINCRONIZACIÓN
 // ============================================================
+let aplicandoRemoto = false;
+
 function publicar(videoEvento) {
+    if (aplicandoRemoto) return;
+
     const estado = {
         tiempo: formatoTiempo(segundosTotales),
         golesLocal,
         golesVisitante,
         parte: spinParte.valueAsNumber + 'ª PARTE',
+        colorMarcador,
         goleadoresLocal: ordenDisplayLocal.map(n => ({
             nombre: n,
             minutos: registroGolesLocal[n] || []
@@ -616,7 +665,17 @@ function publicar(videoEvento) {
         goleadoresVisitante: ordenDisplayVisitante.map(n => ({
             nombre: n,
             minutos: registroGolesVisitante[n] || []
-        }))
+        })),
+        _panel: {
+            golesLocal, golesVisitante,
+            registroGolesLocal, registroGolesVisitante,
+            historialLocal, historialVisitante,
+            ordenDisplayLocal, ordenDisplayVisitante,
+            segundosTotales, esAscendente, limiteMinutos, minutoInicioRef, duracionParte,
+            parteActual: spinParte.valueAsNumber,
+            colorMarcador,
+            jugadores
+        }
     };
     if (videoEvento !== undefined) {
         estado.videoEvento = videoEvento;
@@ -644,6 +703,73 @@ function actualizarTodo(videoEvento) {
     actualizarMonitor();
     publicar(videoEvento);
 }
+
+// ============================================================
+//  SINCRONIZACIÓN BIDIRECCIONAL (recibir estado de otro panel)
+// ============================================================
+function aplicarEstadoRemoto(estado) {
+    if (!estado || !estado._panel) return;
+    const p = estado._panel;
+
+    aplicandoRemoto = true;
+
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+
+    golesLocal = p.golesLocal;
+    golesVisitante = p.golesVisitante;
+    registroGolesLocal = p.registroGolesLocal || {};
+    registroGolesVisitante = p.registroGolesVisitante || {};
+    historialLocal = p.historialLocal || [];
+    historialVisitante = p.historialVisitante || [];
+    ordenDisplayLocal = p.ordenDisplayLocal || [];
+    ordenDisplayVisitante = p.ordenDisplayVisitante || [];
+    segundosTotales = p.segundosTotales;
+    esAscendente = p.esAscendente;
+    limiteMinutos = p.limiteMinutos;
+    minutoInicioRef = p.minutoInicioRef;
+    duracionParte = p.duracionParte;
+    colorMarcador = p.colorMarcador || 'white';
+
+    if (p.jugadores) jugadores = p.jugadores;
+
+    spinParte.value = p.parteActual || 1;
+    spinInicio.value = p.minutoInicioRef || 0;
+    spinFin.value = p.limiteMinutos || 45;
+    const modoRadio = document.querySelector(`input[name="modo"][value="${p.esAscendente ? 'asc' : 'desc'}"]`);
+    if (modoRadio) modoRadio.checked = true;
+    const colorRadio = document.querySelector(`input[name="color-marcador"][value="${colorMarcador}"]`);
+    if (colorRadio) colorRadio.checked = true;
+
+    if (estado.pantalla) {
+        pantallaConfig = estado.pantalla;
+        sliderIds.forEach((id, i) => {
+            const v = pantallaConfig[sliderKeys[i]] || 0;
+            document.getElementById(id).value = v;
+            document.getElementById(id + '-val').textContent = v;
+        });
+    }
+
+    actualizarMonitor();
+
+    if (modalGestion.classList.contains('visible')) {
+        seleccionados.clear();
+        refrescarListasGestion();
+    }
+
+    aplicandoRemoto = false;
+}
+
+onEstadoActualizado(aplicarEstadoRemoto);
+
+// ============================================================
+//  COLOR DEL MARCADOR
+// ============================================================
+document.querySelectorAll('input[name="color-marcador"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+        colorMarcador = radio.value;
+        actualizarTodo();
+    });
+});
 
 // ============================================================
 //  LÓGICA DE TIEMPO
@@ -814,10 +940,11 @@ document.getElementById('btn-stop-video').addEventListener('click', () => {
 });
 
 // ============================================================
-//  GESTIÓN DE EQUIPOS (MODAL)
+//  GESTIÓN DE EQUIPOS (MODAL) — Multi-select + Drag & Drop
 // ============================================================
 const modalGestion = document.getElementById('modal-gestion');
-let seleccionGestion = null;
+const seleccionados = new Set();
+const dropZones = document.querySelectorAll('.modal-lista ul[data-equipo]');
 
 function refrescarListasGestion() {
     const sinAsignar = document.getElementById('lista-sin-asignar');
@@ -826,16 +953,31 @@ function refrescarListasGestion() {
     sinAsignar.innerHTML = '';
     listaLocal.innerHTML = '';
     listaVisitante.innerHTML = '';
-    seleccionGestion = null;
 
-    jugadores.forEach(j => {
+    jugadores.forEach((j, idx) => {
         const li = document.createElement('li');
         li.textContent = j.nombreCorto;
+        li.draggable = true;
+        li.dataset.idx = idx;
+
+        if (seleccionados.has(j)) li.classList.add('selected');
+
         li.addEventListener('click', () => {
-            document.querySelectorAll('.modal-lista li').forEach(el => el.classList.remove('selected'));
-            li.classList.add('selected');
-            seleccionGestion = j;
+            if (seleccionados.has(j)) {
+                seleccionados.delete(j);
+                li.classList.remove('selected');
+            } else {
+                seleccionados.add(j);
+                li.classList.add('selected');
+            }
         });
+
+        li.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', String(idx));
+            e.dataTransfer.effectAllowed = 'move';
+            li.classList.add('dragging');
+        });
+        li.addEventListener('dragend', () => li.classList.remove('dragging'));
 
         if (j.equipo === 'LOCAL') listaLocal.appendChild(li);
         else if (j.equipo === 'VISITANTE') listaVisitante.appendChild(li);
@@ -843,31 +985,50 @@ function refrescarListasGestion() {
     });
 }
 
+dropZones.forEach(ul => {
+    ul.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        ul.classList.add('drag-over');
+    });
+    ul.addEventListener('dragleave', () => ul.classList.remove('drag-over'));
+    ul.addEventListener('drop', (e) => {
+        e.preventDefault();
+        ul.classList.remove('drag-over');
+        const destino = ul.dataset.equipo;
+        const idx = Number(e.dataTransfer.getData('text/plain'));
+        const j = jugadores[idx];
+        if (!j) return;
+
+        if (seleccionados.has(j) && seleccionados.size > 1) {
+            seleccionados.forEach(p => { p.equipo = destino; });
+        } else {
+            j.equipo = destino;
+        }
+        seleccionados.clear();
+        refrescarListasGestion();
+    });
+});
+
+function moverSeleccionados(destino) {
+    if (seleccionados.size === 0) return;
+    seleccionados.forEach(j => { j.equipo = destino; });
+    seleccionados.clear();
+    refrescarListasGestion();
+}
+
 document.getElementById('btn-gestionar').addEventListener('click', () => {
+    seleccionados.clear();
     refrescarListasGestion();
     modalGestion.classList.add('visible');
 });
 document.getElementById('btn-cerrar-gestion').addEventListener('click', () => {
     modalGestion.classList.remove('visible');
 });
-document.getElementById('btn-a-verde').addEventListener('click', () => {
-    if (seleccionGestion && seleccionGestion.equipo !== 'LOCAL') {
-        seleccionGestion.equipo = 'LOCAL';
-        refrescarListasGestion();
-    }
-});
-document.getElementById('btn-a-negro').addEventListener('click', () => {
-    if (seleccionGestion && seleccionGestion.equipo !== 'VISITANTE') {
-        seleccionGestion.equipo = 'VISITANTE';
-        refrescarListasGestion();
-    }
-});
-document.getElementById('btn-quitar').addEventListener('click', () => {
-    if (seleccionGestion && seleccionGestion.equipo !== 'SIN_ASIGNAR') {
-        seleccionGestion.equipo = 'SIN_ASIGNAR';
-        refrescarListasGestion();
-    }
-});
+document.getElementById('btn-a-verde').addEventListener('click', () => moverSeleccionados('LOCAL'));
+document.getElementById('btn-a-negro').addEventListener('click', () => moverSeleccionados('VISITANTE'));
+document.getElementById('btn-quitar').addEventListener('click', () => moverSeleccionados('SIN_ASIGNAR'));
+
 document.getElementById('btn-nuevo-jugador').addEventListener('click', () => {
     const nombre = prompt('Nombre del nuevo jugador:', 'Invitado');
     if (nombre && nombre.trim()) {

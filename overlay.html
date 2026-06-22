@@ -123,8 +123,9 @@ html, body {
     font-family: system-ui, -apple-system, sans-serif;
     font-weight: bold;
     font-size: 400px;
-    color: #000;
+    color: #fff;
     line-height: 1;
+    transition: color 0.3s;
 }
 
 /* --- GOLEADORES LOCAL --- */
@@ -413,6 +414,10 @@ function renderizar(estado) {
 
     renderizarGoleadores(listaLocal, estado.goleadoresLocal || [], 'local');
     renderizarGoleadores(listaVisitante, estado.goleadoresVisitante || [], 'visitante');
+
+    // Color del marcador
+    const color = estado.colorMarcador || 'white';
+    document.querySelectorAll('.gol-numero, .gol-separador').forEach(el => el.style.color = color);
 
     // Video
     if (estado.videoEvento && estado.videoEvento.ts > ultimoVideoTs) {
