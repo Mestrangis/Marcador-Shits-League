@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de Control</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    background: #1a1a2e;
+    color: #eee;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+#panel {
+    width: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* --- MONITOR --- */
+#monitor {
+    background: #333;
+    border-radius: 8px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+#monitor .etiqueta { color: #999; font-size: 12px; text-transform: uppercase; }
+#monitor-tiempo { color: #ffd700; font-weight: bold; font-size: 22px; }
+#monitor-marcador { color: #fff; font-weight: bold; font-size: 22px; }
+#monitor .sep { color: #555; }
+
+/* --- SECCIONES --- */
+.seccion {
+    background: #16213e;
+    border-radius: 8px;
+    padding: 15px;
+}
+.seccion-titulo {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #888;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 5px;
+}
+
+/* --- BOTONES GENERALES --- */
+button {
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    transition: opacity 0.15s;
+}
+button:hover { opacity: 0.85; }
+button:active { opacity: 0.7; }
+
+.btn-gestion {
+    background: #87CEEB;
+    color: #000;
+    width: 100%;
+    padding: 10px;
+    font-size: 15px;
+}
+
+/* --- TIEMPO --- */
+.fila {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.fila label { font-size: 13px; color: #bbb; }
+
+.radio-group {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 8px;
+}
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    color: #ddd;
+}
+
+input[type="number"] {
+    width: 65px;
+    padding: 6px 8px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background: #0f3460;
+    color: #fff;
+    font-size: 14px;
+    text-align: center;
+}
+input[type="number"]:focus { outline: 1px solid #87CEEB; }
+
+.btn-aplicar {
+    background: #533483;
+    color: #fff;
+    width: 100%;
+    margin-top: 8px;
+}
+
+/* --- RELOJ --- */
+.controles-reloj {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+.controles-reloj button {
+    font-size: 20px;
+    width: 60px;
+    height: 45px;
+}
+.btn-play { background: #4caf50; color: #fff; }
+.btn-pause { background: #ff9800; color: #fff; }
+.btn-reset { background: #666; color: #fff; }
+
+/* --- VIDEO --- */
+.btn-stop-video {
+    background: #e53935;
+    color: #fff;
+    width: 100%;
+    padding: 10px;
+    font-size: 15px;
+}
+
+/* --- GOLES --- */
+.zona-goles {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+.equipo-gol {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+}
+.btn-gol-local {
+    background: #90ee90;
+    color: #000;
+    width: 140px;
+    height: 55px;
+    font-size: 16px;
+}
+.btn-gol-visitante {
+    background: #888;
+    color: #000;
+    width: 140px;
+    height: 55px;
+    font-size: 16px;
+}
+.btn-undo {
+    background: transparent;
+    color: #aaa;
+    border: 1px solid #555;
+    font-size: 12px;
+    font-weight: normal;
+    padding: 5px 12px;
+}
+.btn-reset-goles {
+    background: #333;
+    color: #ccc;
+    width: 100%;
+    margin-top: 5px;
+}
+
+/* --- MODAL GESTIÓN EQUIPOS --- */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+.modal-overlay.visible { display: flex; }
+.modal {
+    background: #16213e;
+    border-radius: 10px;
+    padding: 20px;
+    width: 90%;
+    max-width: 850px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.modal h3 { margin-bottom: 15px; color: #fff; }
+.modal-listas {
+    display: flex;
+    gap: 10px;
+}
+.modal-lista {
+    flex: 1;
+    min-width: 0;
+}
+.modal-lista h4 {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 5px;
+}
+.modal-lista ul {
+    list-style: none;
+    background: #0f3460;
+    border-radius: 5px;
+    min-height: 150px;
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 5px;
+}
+.modal-lista li {
+    padding: 6px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 13px;
+}
+.modal-lista li:hover { background: rgba(255,255,255,0.1); }
+.modal-lista li.selected { background: #533483; }
+
+.modal-acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: center;
+    min-width: 120px;
+}
+.modal-acciones button {
+    font-size: 12px;
+    padding: 8px;
+    background: #333;
+    color: #ddd;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    justify-content: space-between;
+}
+.btn-nuevo-jugador { background: #4caf50; color: #fff; }
+.btn-cerrar-modal { background: #555; color: #fff; }
+
+/* --- MODAL SELECTOR GOL --- */
+.selector-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1001;
+    justify-content: center;
+    align-items: center;
+}
+.selector-overlay.visible { display: flex; }
+.selector {
+    background: #16213e;
+    border-radius: 10px;
+    padding: 20px;
+    width: 90%;
+    max-width: 600px;
+}
+.selector h3 { margin-bottom: 15px; color: #fff; }
+.selector-jugadores {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+.selector-jugadores button {
+    width: 100px;
+    height: 50px;
+    font-size: 13px;
+}
+.btn-jugador-local { background: #90ee90; color: #000; }
+.btn-jugador-visitante { background: #222; color: #fff; border: 1px solid #555; }
+.btn-jugador-sin { background: #fff; color: #000; border: 1px solid #ccc; }
+.btn-cancelar-selector { background: #555; color: #fff; }
+
+/* --- ABRIR OVERLAY --- */
+.btn-abrir-overlay {
+    background: #e91e63;
+    color: #fff;
+    width: 100%;
+    padding: 10px;
+    font-size: 15px;
+}
+
+/* --- CONFIG PANTALLA --- */
+.slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+.slider-row label {
+    font-size: 13px;
+    color: #bbb;
+    min-width: 65px;
+    text-align: right;
+}
+.slider-row input[type="range"] {
+    flex: 1;
+    accent-color: #533483;
+    height: 6px;
+}
+.slider-row .slider-val {
+    font-size: 13px;
+    color: #87CEEB;
+    min-width: 45px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.btn-restablecer-pantalla {
+    background: #555;
+    color: #ccc;
+    width: 100%;
+    margin-top: 8px;
+}
+
+/* --- INDICADOR CONEXIÓN --- */
+#indicador-conexion {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: #2a1a1a;
+    font-size: 12px;
+    color: #e53935;
+}
+#indicador-conexion .punto {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #e53935;
+    flex-shrink: 0;
+}
+#indicador-conexion.conectado {
+    background: #1a2a1a;
+    color: #4caf50;
+}
+#indicador-conexion.conectado .punto { background: #4caf50; }
+</style>
+</head>
+<body>
+
+<div id="panel">
+
+    <!-- ABRIR OVERLAY -->
+    <div class="seccion">
+        <button class="btn-abrir-overlay" id="btn-abrir-overlay">&#x1F4FA; ABRIR OVERLAY</button>
+    </div>
+
+    <!-- INDICADOR CONEXIÓN -->
+    <div id="indicador-conexion">
+        <span class="punto"></span>
+        <span class="texto">Conectando...</span>
+    </div>
+
+    <!-- MONITOR -->
+    <div id="monitor">
+        <span class="etiqueta">En pantalla:</span>
+        <span id="monitor-tiempo">00:00</span>
+        <span class="sep">|</span>
+        <span id="monitor-marcador">0 - 0</span>
+    </div>
+
+    <!-- GESTIÓN EQUIPOS -->
+    <div class="seccion">
+        <button class="btn-gestion" id="btn-gestionar">&#9881; GESTIONAR VERDE / NEGRO</button>
+    </div>
+
+    <!-- CONFIGURACIÓN TIEMPO -->
+    <div class="seccion">
+        <div class="seccion-titulo">Configuraci&oacute;n de tiempo</div>
+        <div class="radio-group">
+            <label><input type="radio" name="modo" value="asc" checked> Ascendente</label>
+            <label><input type="radio" name="modo" value="desc"> Descendente</label>
+        </div>
+        <div class="fila">
+            <label>Inicio:</label>
+            <input type="number" id="spin-inicio" min="0" max="90" value="0">
+            <label>Fin:</label>
+            <input type="number" id="spin-fin" min="0" max="90" value="45">
+            <label>Parte:</label>
+            <input type="number" id="spin-parte" min="1" max="4" value="1">
+        </div>
+        <button class="btn-aplicar" id="btn-aplicar">Aplicar Tiempo</button>
+    </div>
+
+    <!-- RELOJ -->
+    <div class="seccion">
+        <div class="seccion-titulo">Reloj</div>
+        <div class="controles-reloj">
+            <button class="btn-play" id="btn-play">&#9654;</button>
+            <button class="btn-pause" id="btn-pause">&#9208;</button>
+            <button class="btn-reset" id="btn-reset-reloj">&#9209;</button>
+        </div>
+    </div>
+
+    <!-- VIDEO -->
+    <div class="seccion">
+        <button class="btn-stop-video" id="btn-stop-video">&#9209; DETENER V&Iacute;DEO</button>
+    </div>
+
+    <!-- CONFIGURACIÓN DE PANTALLA -->
+    <div class="seccion">
+        <div class="seccion-titulo">Configuraci&oacute;n de pantalla (0 = auto)</div>
+        <div class="slider-row">
+            <label>Ancho:</label>
+            <input type="range" id="pantalla-w" min="0" max="3840" value="0">
+            <span class="slider-val" id="pantalla-w-val">0</span>
+        </div>
+        <div class="slider-row">
+            <label>Alto:</label>
+            <input type="range" id="pantalla-h" min="0" max="2160" value="0">
+            <span class="slider-val" id="pantalla-h-val">0</span>
+        </div>
+        <div class="slider-row">
+            <label>Offset X:</label>
+            <input type="range" id="pantalla-ox" min="0" max="1920" value="0">
+            <span class="slider-val" id="pantalla-ox-val">0</span>
+        </div>
+        <div class="slider-row">
+            <label>Offset Y:</label>
+            <input type="range" id="pantalla-oy" min="0" max="1080" value="0">
+            <span class="slider-val" id="pantalla-oy-val">0</span>
+        </div>
+        <button class="btn-restablecer-pantalla" id="btn-restablecer-pantalla">Restablecer</button>
+    </div>
+
+    <!-- MARCADOR -->
+    <div class="seccion">
+        <div class="seccion-titulo">Marcador</div>
+        <div class="zona-goles">
+            <div class="equipo-gol">
+                <button class="btn-gol-local" id="btn-gol-local">GOL VERDE</button>
+                <button class="btn-undo" id="btn-undo-local">Deshacer Verde</button>
+            </div>
+            <div class="equipo-gol">
+                <button class="btn-gol-visitante" id="btn-gol-visitante">GOL NEGRO</button>
+                <button class="btn-undo" id="btn-undo-visitante">Deshacer Negro</button>
+            </div>
+        </div>
+        <button class="btn-reset-goles" id="btn-reset-goles">Reset 0-0</button>
+    </div>
+</div>
+
+<!-- MODAL GESTIÓN EQUIPOS -->
+<div class="modal-overlay" id="modal-gestion">
+    <div class="modal">
+        <h3>Gesti&oacute;n de Equipos</h3>
+        <div class="modal-listas">
+            <div class="modal-lista">
+                <h4>Sin Asignar</h4>
+                <ul id="lista-sin-asignar"></ul>
+            </div>
+            <div class="modal-acciones">
+                <button id="btn-a-verde">&#10145; A VERDE</button>
+                <button id="btn-a-negro">&#10145; A NEGRO</button>
+                <button id="btn-quitar">&#11013; Quitar</button>
+            </div>
+            <div class="modal-lista">
+                <h4>VERDE (Local)</h4>
+                <ul id="lista-local"></ul>
+            </div>
+            <div class="modal-lista">
+                <h4>NEGRO (Visitante)</h4>
+                <ul id="lista-visitante"></ul>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-nuevo-jugador" id="btn-nuevo-jugador">&#10133; Nuevo Jugador</button>
+            <button class="btn-cerrar-modal" id="btn-cerrar-gestion">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL SELECTOR DE GOLEADOR -->
+<div class="selector-overlay" id="modal-selector">
+    <div class="selector">
+        <h3 id="selector-titulo">Selecciona Jugador</h3>
+        <div class="selector-jugadores" id="selector-jugadores"></div>
+        <button class="btn-cancelar-selector" id="btn-cancelar-selector">Cancelar</button>
+    </div>
+</div>
+
+<script type="module">
+import { publicarEstado, onConexionCambiada, onSolicitudEstado } from './sync.js';
+
+// ============================================================
+//  ABRIR OVERLAY
+// ============================================================
+document.getElementById('btn-abrir-overlay').addEventListener('click', () => {
+    window.open('overlay.html', 'overlay', 'noopener');
+});
+
+// ============================================================
+//  CONFIGURACIÓN DE PANTALLA (sliders en tiempo real)
+// ============================================================
+let pantallaConfig = { offsetX: 0, offsetY: 0, ancho: 0, alto: 0 };
+
+const sliderIds = ['pantalla-w', 'pantalla-h', 'pantalla-ox', 'pantalla-oy'];
+const sliderKeys = ['ancho', 'alto', 'offsetX', 'offsetY'];
+
+sliderIds.forEach((id, i) => {
+    const slider = document.getElementById(id);
+    const valSpan = document.getElementById(id + '-val');
+    slider.addEventListener('input', () => {
+        const v = Number(slider.value);
+        valSpan.textContent = v;
+        pantallaConfig[sliderKeys[i]] = v;
+        actualizarTodo();
+    });
+});
+
+document.getElementById('btn-restablecer-pantalla').addEventListener('click', () => {
+    pantallaConfig = { offsetX: 0, offsetY: 0, ancho: 0, alto: 0 };
+    sliderIds.forEach((id, i) => {
+        const slider = document.getElementById(id);
+        slider.value = 0;
+        document.getElementById(id + '-val').textContent = '0';
+    });
+    actualizarTodo();
+});
+
+// ============================================================
+//  DATOS DE JUGADORES
+// ============================================================
+const VIDEO_DEFAULT_LOCAL = 'assets/videos/default.mp4';
+let jugadores = [];
+let videoCelebracionDefault = VIDEO_DEFAULT_LOCAL;
+
+async function cargarJugadores() {
+    try {
+        const resp = await fetch('jugadores.json');
+        const data = await resp.json();
+        videoCelebracionDefault = data.videoCelebracionDefault || VIDEO_DEFAULT_LOCAL;
+        jugadores = data.jugadores.map(j => ({
+            nombreCorto: j.nombreCorto,
+            nombreCompleto: j.nombreCompleto,
+            equipo: j.equipo || 'SIN_ASIGNAR',
+            videoCelebracion: j.videoCelebracion || null
+        }));
+    } catch (e) {
+        console.error('Error cargando jugadores.json:', e);
+    }
+}
+
+// ============================================================
+//  ESTADO DEL PARTIDO
+// ============================================================
+let golesLocal = 0;
+let golesVisitante = 0;
+
+let registroGolesLocal = {};
+let registroGolesVisitante = {};
+let historialLocal = [];
+let historialVisitante = [];
+let ordenDisplayLocal = [];
+let ordenDisplayVisitante = [];
+
+const MAX_GOLEADORES = 5;
+
+// ============================================================
+//  CRONÓMETRO
+// ============================================================
+let segundosTotales = 0;
+let esAscendente = true;
+let limiteMinutos = 45;
+let minutoInicioRef = 0;
+let duracionParte = 45;
+let timerInterval = null;
+
+// ============================================================
+//  REFERENCIAS DOM
+// ============================================================
+const monitorTiempo = document.getElementById('monitor-tiempo');
+const monitorMarcador = document.getElementById('monitor-marcador');
+const spinInicio = document.getElementById('spin-inicio');
+const spinFin = document.getElementById('spin-fin');
+const spinParte = document.getElementById('spin-parte');
+
+// ============================================================
+//  SINCRONIZACIÓN
+// ============================================================
+function publicar(videoEvento) {
+    const estado = {
+        tiempo: formatoTiempo(segundosTotales),
+        golesLocal,
+        golesVisitante,
+        parte: spinParte.valueAsNumber + 'ª PARTE',
+        goleadoresLocal: ordenDisplayLocal.map(n => ({
+            nombre: n,
+            minutos: registroGolesLocal[n] || []
+        })),
+        goleadoresVisitante: ordenDisplayVisitante.map(n => ({
+            nombre: n,
+            minutos: registroGolesVisitante[n] || []
+        }))
+    };
+    if (videoEvento !== undefined) {
+        estado.videoEvento = videoEvento;
+    }
+    estado.pantalla = pantallaConfig;
+    const urls = new Set();
+    if (videoCelebracionDefault) urls.add(videoCelebracionDefault);
+    jugadores.forEach(j => { if (j.videoCelebracion) urls.add(j.videoCelebracion); });
+    estado.videosPrecargar = [...urls];
+    publicarEstado(estado);
+}
+
+function formatoTiempo(segs) {
+    const m = Math.floor(segs / 60);
+    const s = segs % 60;
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+function actualizarMonitor() {
+    monitorTiempo.textContent = formatoTiempo(segundosTotales);
+    monitorMarcador.textContent = golesLocal + ' - ' + golesVisitante;
+}
+
+function actualizarTodo(videoEvento) {
+    actualizarMonitor();
+    publicar(videoEvento);
+}
+
+// ============================================================
+//  LÓGICA DE TIEMPO
+// ============================================================
+document.getElementById('btn-aplicar').addEventListener('click', () => {
+    esAscendente = document.querySelector('input[name="modo"]:checked').value === 'asc';
+    const ini = spinInicio.valueAsNumber || 0;
+    const fin = spinFin.valueAsNumber || 45;
+    limiteMinutos = fin;
+    minutoInicioRef = ini;
+    duracionParte = Math.abs(fin - ini);
+    if (duracionParte === 0) duracionParte = 45;
+    segundosTotales = ini * 60;
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    actualizarTodo();
+});
+
+document.getElementById('btn-play').addEventListener('click', () => {
+    if (timerInterval) return;
+    timerInterval = setInterval(() => {
+        if (esAscendente) {
+            if (segundosTotales < limiteMinutos * 60) segundosTotales++;
+            else { clearInterval(timerInterval); timerInterval = null; }
+        } else {
+            if (segundosTotales > 0) segundosTotales--;
+            else { clearInterval(timerInterval); timerInterval = null; }
+        }
+        actualizarTodo();
+    }, 1000);
+});
+
+document.getElementById('btn-pause').addEventListener('click', () => {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+});
+
+document.getElementById('btn-reset-reloj').addEventListener('click', () => {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    segundosTotales = (spinInicio.valueAsNumber || 0) * 60;
+    actualizarTodo();
+});
+
+// ============================================================
+//  LÓGICA DE GOLES
+// ============================================================
+function obtenerMinutoCalculado() {
+    const minutoReloj = Math.floor(segundosTotales / 60);
+    const parte = spinParte.valueAsNumber || 1;
+    const jugados = esAscendente
+        ? (minutoReloj - minutoInicioRef)
+        : (minutoInicioRef - minutoReloj);
+    const real = ((parte - 1) * duracionParte) + jugados;
+    return Math.max(0, real);
+}
+
+function agregarGol(esLocal, jugador) {
+    let nombreMostrar = jugador.nombreCorto;
+    if (esLocal && jugador.equipo === 'VISITANTE') nombreMostrar += ' (PP)';
+    else if (!esLocal && jugador.equipo === 'LOCAL') nombreMostrar += ' (PP)';
+
+    const minuto = obtenerMinutoCalculado() + "'";
+    const registro = esLocal ? registroGolesLocal : registroGolesVisitante;
+    const historial = esLocal ? historialLocal : historialVisitante;
+    const orden = esLocal ? ordenDisplayLocal : ordenDisplayVisitante;
+
+    if (!registro[nombreMostrar]) registro[nombreMostrar] = [];
+    registro[nombreMostrar].push(minuto);
+    historial.push(nombreMostrar);
+
+    const idx = orden.indexOf(nombreMostrar);
+    if (idx !== -1) orden.splice(idx, 1);
+    orden.push(nombreMostrar);
+
+    if (orden.length > MAX_GOLEADORES) orden.shift();
+
+    if (esLocal) golesLocal++;
+    else golesVisitante++;
+
+    const videoUrl = jugador.videoCelebracion || videoCelebracionDefault;
+    const videoEvento = videoUrl ? { url: videoUrl, ts: Date.now() } : undefined;
+    actualizarTodo(videoEvento);
+}
+
+function deshacerGol(esLocal) {
+    const registro = esLocal ? registroGolesLocal : registroGolesVisitante;
+    const historial = esLocal ? historialLocal : historialVisitante;
+    const orden = esLocal ? ordenDisplayLocal : ordenDisplayVisitante;
+
+    if (esLocal) { if (golesLocal <= 0) return; }
+    else { if (golesVisitante <= 0) return; }
+
+    if (historial.length === 0) return;
+    const nombre = historial.pop();
+
+    if (registro[nombre] && registro[nombre].length > 0) {
+        registro[nombre].pop();
+    }
+
+    const idx = orden.indexOf(nombre);
+    if (idx !== -1) orden.splice(idx, 1);
+
+    if (registro[nombre] && registro[nombre].length > 0) {
+        orden.push(nombre);
+        if (orden.length > MAX_GOLEADORES) orden.shift();
+    } else {
+        delete registro[nombre];
+    }
+
+    if (esLocal) golesLocal--;
+    else golesVisitante--;
+
+    actualizarTodo();
+}
+
+function resetGoles() {
+    golesLocal = 0;
+    golesVisitante = 0;
+    registroGolesLocal = {};
+    registroGolesVisitante = {};
+    historialLocal = [];
+    historialVisitante = [];
+    ordenDisplayLocal = [];
+    ordenDisplayVisitante = [];
+    actualizarTodo();
+}
+
+// ============================================================
+//  SELECTOR DE GOLEADOR (MODAL)
+// ============================================================
+let selectorEsLocal = true;
+const modalSelector = document.getElementById('modal-selector');
+const selectorTitulo = document.getElementById('selector-titulo');
+const selectorJugadores = document.getElementById('selector-jugadores');
+
+function abrirSelector(esLocal) {
+    selectorEsLocal = esLocal;
+    selectorTitulo.textContent = 'Selecciona Jugador (' + (esLocal ? 'VERDE' : 'NEGRO') + ')';
+    selectorJugadores.innerHTML = '';
+
+    jugadores.forEach(j => {
+        const btn = document.createElement('button');
+        btn.textContent = j.nombreCorto;
+        if (j.equipo === 'LOCAL') btn.className = 'btn-jugador-local';
+        else if (j.equipo === 'VISITANTE') btn.className = 'btn-jugador-visitante';
+        else btn.className = 'btn-jugador-sin';
+
+        btn.addEventListener('click', () => {
+            agregarGol(selectorEsLocal, j);
+            modalSelector.classList.remove('visible');
+        });
+        selectorJugadores.appendChild(btn);
+    });
+
+    modalSelector.classList.add('visible');
+}
+
+document.getElementById('btn-gol-local').addEventListener('click', () => abrirSelector(true));
+document.getElementById('btn-gol-visitante').addEventListener('click', () => abrirSelector(false));
+document.getElementById('btn-cancelar-selector').addEventListener('click', () => modalSelector.classList.remove('visible'));
+document.getElementById('btn-undo-local').addEventListener('click', () => deshacerGol(true));
+document.getElementById('btn-undo-visitante').addEventListener('click', () => deshacerGol(false));
+document.getElementById('btn-reset-goles').addEventListener('click', resetGoles);
+
+// ============================================================
+//  VIDEO
+// ============================================================
+document.getElementById('btn-stop-video').addEventListener('click', () => {
+    actualizarTodo({ url: null, ts: Date.now() });
+});
+
+// ============================================================
+//  GESTIÓN DE EQUIPOS (MODAL)
+// ============================================================
+const modalGestion = document.getElementById('modal-gestion');
+let seleccionGestion = null;
+
+function refrescarListasGestion() {
+    const sinAsignar = document.getElementById('lista-sin-asignar');
+    const listaLocal = document.getElementById('lista-local');
+    const listaVisitante = document.getElementById('lista-visitante');
+    sinAsignar.innerHTML = '';
+    listaLocal.innerHTML = '';
+    listaVisitante.innerHTML = '';
+    seleccionGestion = null;
+
+    jugadores.forEach(j => {
+        const li = document.createElement('li');
+        li.textContent = j.nombreCorto;
+        li.addEventListener('click', () => {
+            document.querySelectorAll('.modal-lista li').forEach(el => el.classList.remove('selected'));
+            li.classList.add('selected');
+            seleccionGestion = j;
+        });
+
+        if (j.equipo === 'LOCAL') listaLocal.appendChild(li);
+        else if (j.equipo === 'VISITANTE') listaVisitante.appendChild(li);
+        else sinAsignar.appendChild(li);
+    });
+}
+
+document.getElementById('btn-gestionar').addEventListener('click', () => {
+    refrescarListasGestion();
+    modalGestion.classList.add('visible');
+});
+document.getElementById('btn-cerrar-gestion').addEventListener('click', () => {
+    modalGestion.classList.remove('visible');
+});
+document.getElementById('btn-a-verde').addEventListener('click', () => {
+    if (seleccionGestion && seleccionGestion.equipo !== 'LOCAL') {
+        seleccionGestion.equipo = 'LOCAL';
+        refrescarListasGestion();
+    }
+});
+document.getElementById('btn-a-negro').addEventListener('click', () => {
+    if (seleccionGestion && seleccionGestion.equipo !== 'VISITANTE') {
+        seleccionGestion.equipo = 'VISITANTE';
+        refrescarListasGestion();
+    }
+});
+document.getElementById('btn-quitar').addEventListener('click', () => {
+    if (seleccionGestion && seleccionGestion.equipo !== 'SIN_ASIGNAR') {
+        seleccionGestion.equipo = 'SIN_ASIGNAR';
+        refrescarListasGestion();
+    }
+});
+document.getElementById('btn-nuevo-jugador').addEventListener('click', () => {
+    const nombre = prompt('Nombre del nuevo jugador:', 'Invitado');
+    if (nombre && nombre.trim()) {
+        const videoUrl = prompt('URL de vídeo de celebración (dejar vacío para usar el por defecto):', '');
+        jugadores.push({
+            nombreCorto: nombre.trim().toUpperCase(),
+            nombreCompleto: nombre.trim(),
+            equipo: 'SIN_ASIGNAR',
+            videoCelebracion: (videoUrl && videoUrl.trim()) ? videoUrl.trim() : null
+        });
+        refrescarListasGestion();
+    }
+});
+
+// ============================================================
+//  INDICADOR DE CONEXIÓN + RESPONDER SOLICITUDES
+// ============================================================
+const indicador = document.getElementById('indicador-conexion');
+const indicadorTexto = indicador.querySelector('.texto');
+
+onConexionCambiada((estado) => {
+    if (estado === 'connected') {
+        indicador.classList.add('conectado');
+        indicadorTexto.textContent = 'Conectado';
+    } else {
+        indicador.classList.remove('conectado');
+        const textos = {
+            connecting: 'Conectando...',
+            disconnected: 'Desconectado',
+            suspended: 'Suspendido',
+            closed: 'Cerrado',
+            failed: 'Error'
+        };
+        indicadorTexto.textContent = textos[estado] || estado;
+    }
+});
+
+onSolicitudEstado(() => {
+    publicar();
+});
+
+// ============================================================
+//  INICIO
+// ============================================================
+cargarJugadores().then(() => {
+    actualizarTodo();
+});
+</script>
+</body>
+</html>

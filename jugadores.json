@@ -1,0 +1,29 @@
+{
+  "videoCelebracionDefault": null,
+  "jugadores": [
+    {
+      "nombreCorto": "VICU",
+      "nombreCompleto": "Víctor",
+      "equipo": "SIN_ASIGNAR",
+      "videoCelebracion": null
+    },
+    {
+      "nombreCorto": "MARCOS",
+      "nombreCompleto": "Marcos",
+      "equipo": "SIN_ASIGNAR",
+      "videoCelebracion": null
+    },
+    {
+      "nombreCorto": "JUNQUERA",
+      "nombreCompleto": "Junquera",
+      "equipo": "SIN_ASIGNAR",
+      "videoCelebracion": null
+    },
+    {
+      "nombreCorto": "PABLO",
+      "nombreCompleto": "Pablín",
+      "equipo": "SIN_ASIGNAR",
+      "videoCelebracion": null
+    }
+  ]
+}

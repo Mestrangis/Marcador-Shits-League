@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.media.MediaView?>
+<?import javafx.scene.text.Font?>
+
+<StackPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1080.0" prefWidth="1920.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.marcador.ControladorMarcador">
+   <children>
+      <ImageView fx:id="imagenFondo" fitHeight="1080.0" fitWidth="1920.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@fondo.png" />
+         </image>
+      </ImageView>
+      <AnchorPane prefHeight="200.0" prefWidth="200.0">
+         <children>
+            <StackPane layoutX="508.0" layoutY="46.0" prefHeight="150.0" prefWidth="200.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="20.0">
+               <children>
+                  <ImageView fitHeight="400.0" fitWidth="1000.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@caja_cronometro.png" />
+                     </image>
+                  </ImageView>
+                  <Label fx:id="lblTiempo" text="00:00" textAlignment="CENTER" textFill="WHITE">
+                     <font>
+                        <Font name="System Bold" size="225.0" />
+                     </font>
+                  </Label>
+               </children>
+            </StackPane>
+            <StackPane layoutX="100.0" layoutY="846.0" prefHeight="150.0" prefWidth="200.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="67.0">
+               <children>
+                  <ImageView fitHeight="250.0" fitWidth="650.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@caja_goleador_local.png" />
+                     </image>
+                  </ImageView>
+                  <VBox fx:id="listaGoleadoresLocal" prefHeight="200.0" prefWidth="100.0">
+                     <padding>
+                        <Insets bottom="15.0" left="50.0" right="100.0" top="25.0" />
+                     </padding></VBox>
+               </children>
+            </StackPane>
+            <StackPane layoutX="1290.0" layoutY="844.0" prefHeight="150.0" prefWidth="200.0" AnchorPane.bottomAnchor="50.0" AnchorPane.rightAnchor="67.0">
+               <children>
+                  <ImageView fitHeight="250.0" fitWidth="630.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@caja_goleador_visitante.png" />
+                     </image>
+                  </ImageView>
+                  <VBox fx:id="listaGoleadoresVisitante" prefHeight="200.0" prefWidth="100.0">
+                     <padding>
+                        <Insets bottom="15.0" left="50.0" right="15.0" top="15.0" />
+                     </padding></VBox>
+               </children>
+            </StackPane>
+            <StackPane layoutX="184.0" layoutY="383.0" prefHeight="150.0" prefWidth="200.0">
+               <children>
+                  <ImageView fitHeight="400.0" fitWidth="400.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@escudo_local.png" />
+                     </image>
+                  </ImageView>
+               </children>
+            </StackPane>
+            <StackPane layoutX="1354.0" layoutY="399.0" prefHeight="150.0" prefWidth="200.0">
+               <children>
+                  <ImageView fitHeight="400.0" fitWidth="400.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@escudo_visitante.png" />
+                     </image>
+                  </ImageView>
+               </children>
+            </StackPane>
+            <StackPane layoutX="888.0" layoutY="495.0" prefHeight="150.0" prefWidth="500.0" AnchorPane.bottomAnchor="200.0" AnchorPane.leftAnchor="200.0" AnchorPane.rightAnchor="200.0">
+               <children>
+                  <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="20.0" StackPane.alignment="CENTER">
+                     <children>
+                        <Label fx:id="lblGolesLocal" text="0" textAlignment="CENTER" textFill="WHITE">
+                           <font>
+                              <Font name="System Bold" size="400.0" />
+                           </font>
+                        </Label>
+                        <Label text="-" textAlignment="CENTER" textFill="WHITE">
+                           <font>
+                              <Font name="System Bold" size="400.0" />
+                           </font>
+                        </Label>
+                        <Label fx:id="lblGolesVisitante" text="0" textAlignment="CENTER" textFill="WHITE">
+                           <font>
+                              <Font name="System Bold" size="400.0" />
+                           </font>
+                        </Label>
+                     </children>
+                  </HBox>
+               </children>
+            </StackPane>
+            <StackPane layoutX="74.0" layoutY="308.0" prefHeight="150.0" prefWidth="200.0" AnchorPane.leftAnchor="800.0" AnchorPane.rightAnchor="800.0" AnchorPane.topAnchor="290.0">
+               <children>
+                  <ImageView fitHeight="150.0" fitWidth="400.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@caja_parte.png" />
+                     </image>
+                  </ImageView>
+                  <Label fx:id="lblParte" scaleX="1.1" text="1ª PARTE" textAlignment="CENTER" textFill="WHITE">
+                     <font>
+                        <Font name="System Bold" size="41.0" />
+                     </font>
+                  </Label>
+               </children>
+            </StackPane>
+         </children>
+      </AnchorPane>
+      <MediaView fx:id="pantallaVideo" fitHeight="1080.0" fitWidth="1920.0" visible="false" />
+   </children>
+</StackPane>

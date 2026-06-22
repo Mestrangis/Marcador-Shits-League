@@ -1,0 +1,13 @@
+# CONFIGURACIÓN DEL MARCADOR
+# Formato vídeo por defecto: VIDEO_DEFAULT = ruta
+VIDEO_DEFAULT = E:/Shits League/App/Marcador Project/marcador-deportivo/gol.mp4
+
+# LISTA DE JUGADORES
+# Formato: NombreCorto, NombreLargo, RutaImagen, RutaVideo
+# Nota: Si no tiene imagen o vídeo, escribe "null" o déjalo vacío.
+# Usa barras normales (/) o dobles barras invertidas (\\) para las rutas.
+
+VICU, Víctor, null, null
+MARCOS, Marcos, null, "C:/Users/marco/Videos/Captures/R.E.P.O. 2025-05-02 15-55-15.mp4
+JUNQUERA, Junquera, null, null
+PABLO, Pablín, null, null
