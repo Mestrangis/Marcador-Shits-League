@@ -313,6 +313,15 @@ input[type="radio"] { accent-color: var(--green); width: 16px; height: 16px; }
 .modal-lista li:hover { background: rgba(0,230,118,.08); }
 .modal-lista li.selected { background: var(--green-dim); color: var(--green); }
 .modal-lista li.dragging { opacity: .4; }
+.modal-lista li { position: relative; padding-right: 36px; }
+.btn-eliminar-jugador {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    width: 24px; height: 24px; padding: 0; border-radius: 50%;
+    background: transparent; color: var(--red); font-size: 16px; font-weight: 400;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid rgba(255,23,68,.3); line-height: 1;
+}
+.btn-eliminar-jugador:active { background: rgba(255,23,68,.2); }
 .modal-acciones { display: flex; flex-direction: column; gap: 6px; justify-content: center; min-width: 100px; }
 .modal-acciones button { font-size: 12px; padding: 10px 6px; background: var(--surface2); color: var(--white); border: 1px solid var(--border); border-radius: 8px; min-height: 42px; }
 .modal-footer { display: flex; gap: 8px; margin-top: 14px; }
@@ -487,9 +496,10 @@ input[type="radio"] { accent-color: var(--green); width: 16px; height: 16px; }
     </div>
 
     <div class="card">
-        <div class="card-title">Marcador</div>
-        <div style="display:flex;gap:10px;justify-content:center">
-            <button class="btn-sec danger" id="btn-reset-goles" style="flex:1">Reset 0-0</button>
+        <div class="card-title">Partido</div>
+        <div style="display:flex;gap:10px;flex-direction:column">
+            <button class="btn-sec danger" id="btn-reset-goles">Reset marcador 0-0</button>
+            <button class="btn-sec danger" id="btn-reset-partido" style="border-color:var(--red);color:var(--red);font-weight:800">Resetear partido completo</button>
         </div>
     </div>
 </div>
@@ -861,6 +871,18 @@ document.getElementById('btn-undo-local').addEventListener('click', () => deshac
 document.getElementById('btn-undo-visitante').addEventListener('click', () => deshacerGol(false));
 document.getElementById('btn-reset-goles').addEventListener('click', resetGoles);
 
+document.getElementById('btn-reset-partido').addEventListener('click', () => {
+    if (!confirm('¿Seguro? Esto borra el marcador, goleadores y jugadores añadidos.')) return;
+    golesLocal = 0; golesVisitante = 0;
+    registroGolesLocal = {}; registroGolesVisitante = {};
+    historialLocal = []; historialVisitante = [];
+    ordenDisplayLocal = []; ordenDisplayVisitante = [];
+    jugadoresDinamicos = [];
+    reconstruirJugadores();
+    actualizarMonitorMarcador();
+    enviarComando('configurar', 0, leerConfig());
+});
+
 // ============================================================
 //  SELECTOR DE GOLEADOR (modal "¿Quién marcó?")
 // ============================================================
@@ -936,12 +958,35 @@ function refrescarListasGestion() {
 
     jugadores.forEach((j, idx) => {
         const li = document.createElement('li');
-        li.textContent = j.nombreCorto;
+        const span = document.createElement('span');
+        span.textContent = j.nombreCorto;
+        li.appendChild(span);
         li.draggable = true; li.dataset.idx = idx;
         if (seleccionados.has(j)) li.classList.add('selected');
-        li.addEventListener('click', () => { if (seleccionados.has(j)) { seleccionados.delete(j); li.classList.remove('selected'); } else { seleccionados.add(j); li.classList.add('selected'); } });
+        li.addEventListener('click', (e) => {
+            if (e.target.classList.contains('btn-eliminar-jugador')) return;
+            if (seleccionados.has(j)) { seleccionados.delete(j); li.classList.remove('selected'); }
+            else { seleccionados.add(j); li.classList.add('selected'); }
+        });
         li.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', String(idx)); e.dataTransfer.effectAllowed = 'move'; li.classList.add('dragging'); });
         li.addEventListener('dragend', () => li.classList.remove('dragging'));
+
+        const esDinamico = jugadoresDinamicos.some(d => d.nombreCorto === j.nombreCorto);
+        if (esDinamico) {
+            const btnDel = document.createElement('button');
+            btnDel.className = 'btn-eliminar-jugador';
+            btnDel.innerHTML = '&times;';
+            btnDel.addEventListener('click', (e) => {
+                e.stopPropagation();
+                jugadoresDinamicos = jugadoresDinamicos.filter(d => d.nombreCorto !== j.nombreCorto);
+                seleccionados.delete(j);
+                reconstruirJugadores();
+                refrescarListasGestion();
+                publicarEstadoCompleto();
+            });
+            li.appendChild(btnDel);
+        }
+
         if (j.equipo === 'LOCAL') listaLocal.appendChild(li);
         else if (j.equipo === 'VISITANTE') listaVisitante.appendChild(li);
         else sinAsignar.appendChild(li);
