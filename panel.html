@@ -365,7 +365,7 @@ let historialLocal = [];
 let historialVisitante = [];
 let ordenDisplayLocal = [];
 let ordenDisplayVisitante = [];
-const MAX_GOLEADORES = 5;
+
 let colorMarcador = 'white';
 
 // ============================================================
@@ -596,7 +596,7 @@ function agregarGol(esLocal, jugador) {
     const idx = orden.indexOf(nombreMostrar);
     if (idx !== -1) orden.splice(idx, 1);
     orden.push(nombreMostrar);
-    if (orden.length > MAX_GOLEADORES) orden.shift();
+
 
     if (esLocal) golesLocal++; else golesVisitante++;
     actualizarMonitorMarcador();
@@ -619,7 +619,7 @@ function deshacerGol(esLocal) {
     if (idx !== -1) orden.splice(idx, 1);
     if (registro[nombre] && registro[nombre].length > 0) {
         orden.push(nombre);
-        if (orden.length > MAX_GOLEADORES) orden.shift();
+    
     } else { delete registro[nombre]; }
 
     if (esLocal) golesLocal--; else golesVisitante--;

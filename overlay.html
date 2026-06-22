@@ -14,20 +14,19 @@ html, body {
     height: 100%;
 }
 
+/* --- FONDO: capa independiente, object-fit cover sobre la zona segura --- */
+#fondo-cover {
+    position: absolute;
+    background: url('assets/images/fondo.png') center / cover no-repeat;
+}
+
+/* --- LIENZO UI: 1920x1080, escala uniforme, centrado --- */
 #lienzo {
     width: 1920px;
     height: 1080px;
     position: absolute;
     transform-origin: 0 0;
     overflow: hidden;
-}
-
-#fondo {
-    position: absolute;
-    top: 0; left: 0;
-    width: 1920px;
-    height: 1080px;
-    object-fit: cover;
 }
 
 /* --- CRONÓMETRO --- */
@@ -45,10 +44,7 @@ html, body {
     justify-content: center;
     align-items: center;
 }
-#zona-cronometro .caja img {
-    width: 1000px;
-    height: auto;
-}
+#zona-cronometro .caja img { width: 1000px; height: auto; }
 #lbl-tiempo {
     position: absolute;
     font-family: system-ui, -apple-system, sans-serif;
@@ -63,8 +59,7 @@ html, body {
 #zona-parte {
     position: absolute;
     top: 290px;
-    left: 800px;
-    right: 800px;
+    left: 800px; right: 800px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -75,10 +70,7 @@ html, body {
     justify-content: center;
     align-items: center;
 }
-#zona-parte .caja img {
-    width: 400px;
-    height: auto;
-}
+#zona-parte .caja img { width: 400px; height: auto; }
 #lbl-parte {
     position: absolute;
     font-family: system-ui, -apple-system, sans-serif;
@@ -90,7 +82,7 @@ html, body {
     white-space: nowrap;
 }
 
-/* --- ESCUDOS --- */
+/* --- ESCUDOS (con transición para desplazamiento por decena) --- */
 #escudo-local {
     position: absolute;
     left: 184px;
@@ -98,6 +90,7 @@ html, body {
     width: 400px;
     height: 400px;
     object-fit: contain;
+    transition: transform 0.3s ease;
 }
 #escudo-visitante {
     position: absolute;
@@ -106,13 +99,15 @@ html, body {
     width: 400px;
     height: 400px;
     object-fit: contain;
+    transition: transform 0.3s ease;
 }
+#lienzo.decena #escudo-local { transform: translateX(-150px); }
+#lienzo.decena #escudo-visitante { transform: translateX(150px); }
 
 /* --- MARCADOR CENTRAL --- */
 #zona-marcador {
     position: absolute;
-    left: 200px;
-    right: 200px;
+    left: 200px; right: 200px;
     top: 380px;
     display: flex;
     justify-content: center;
@@ -128,135 +123,84 @@ html, body {
     transition: color 0.3s;
 }
 
-/* --- GOLEADORES LOCAL --- */
+/* --- GOLEADORES (con clip y scroll) --- */
 #zona-goleadores-local {
     position: absolute;
     bottom: 50px;
     left: 67px;
 }
-#zona-goleadores-local .caja {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-#zona-goleadores-local .caja img {
-    width: 650px;
-    height: auto;
-}
-#lista-goleadores-local {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    padding: 25px 100px 15px 50px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-}
-#lista-goleadores-local .goleador {
-    font-family: system-ui, -apple-system, sans-serif;
-    font-weight: bold;
-    font-size: 30px;
-    color: #fff;
-    text-align: right;
-    white-space: nowrap;
-    line-height: 1.4;
-}
-
-/* --- GOLEADORES VISITANTE --- */
 #zona-goleadores-visitante {
     position: absolute;
     bottom: 50px;
     right: 67px;
 }
-#zona-goleadores-visitante .caja {
+
+.caja-goleadores {
     position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    overflow: hidden;
 }
-#zona-goleadores-visitante .caja img {
-    width: 630px;
-    height: auto;
+.caja-goleadores img.fondo-caja {
+    display: block;
 }
-#lista-goleadores-visitante {
+#zona-goleadores-local .caja-goleadores { width: 650px; height: 213px; }
+#zona-goleadores-local .caja-goleadores img { width: 650px; height: 213px; }
+#zona-goleadores-visitante .caja-goleadores { width: 630px; height: 220px; }
+#zona-goleadores-visitante .caja-goleadores img { width: 630px; height: 220px; }
+
+.goleadores-clip {
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    padding: 15px 15px 15px 50px;
+    top: 25px; bottom: 32px;
+    overflow: hidden;
+}
+#zona-goleadores-local .goleadores-clip { left: 50px; right: 120px; }
+#zona-goleadores-visitante .goleadores-clip { left: 50px; right: 15px; }
+
+.goleadores-contenido {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
 }
-#lista-goleadores-visitante .goleador {
+.goleadores-contenido .goleador {
     font-family: system-ui, -apple-system, sans-serif;
     font-weight: bold;
     font-size: 30px;
     color: #fff;
-    text-align: left;
     white-space: nowrap;
     line-height: 1.4;
 }
+#zona-goleadores-local .goleador { text-align: right; }
+#zona-goleadores-visitante .goleador { text-align: left; }
 
 /* --- VIDEO OVERLAY --- */
 #capa-video {
     position: absolute;
     top: 0; left: 0;
-    width: 1920px;
-    height: 1080px;
-    display: none;
-    opacity: 0;
+    width: 1920px; height: 1080px;
+    display: none; opacity: 0;
     z-index: 100;
     background: #000;
 }
-#capa-video video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
+#capa-video video { width: 100%; height: 100%; object-fit: cover; }
 
 /* --- INDICADOR CONEXIÓN --- */
 #indicador-conexion {
-    position: fixed;
-    bottom: 10px;
-    left: 10px;
-    z-index: 200;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: system-ui, sans-serif;
-    font-size: 11px;
-    color: #aaa;
-    opacity: 0;
-    transition: opacity 0.3s;
+    position: fixed; bottom: 10px; left: 10px; z-index: 200;
+    display: flex; align-items: center; gap: 6px;
+    font-family: system-ui, sans-serif; font-size: 11px; color: #aaa;
+    opacity: 0; transition: opacity 0.3s;
 }
 body:hover #indicador-conexion { opacity: 1; }
-#indicador-conexion .punto {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #e53935;
-    flex-shrink: 0;
-}
+#indicador-conexion .punto { width: 8px; height: 8px; border-radius: 50%; background: #e53935; flex-shrink: 0; }
 #indicador-conexion.conectado .punto { background: #4caf50; }
 
 /* --- BOTÓN FULLSCREEN --- */
 #btn-fullscreen {
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-    z-index: 200;
-    width: 40px;
-    height: 40px;
-    background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.3);
-    border-radius: 6px;
-    color: #fff;
-    font-size: 18px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s;
+    position: fixed; bottom: 10px; right: 10px; z-index: 200;
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 6px; color: #fff; font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.3s;
 }
 #btn-fullscreen:hover { background: rgba(255,255,255,0.3); }
 body:hover #btn-fullscreen { opacity: 1; }
@@ -264,8 +208,11 @@ body:hover #btn-fullscreen { opacity: 1; }
 </head>
 <body>
 
+<!-- Fondo: capa separada, cover sin deformación -->
+<div id="fondo-cover"></div>
+
+<!-- Lienzo UI: escala uniforme -->
 <div id="lienzo">
-    <img id="fondo" src="assets/images/fondo.png" alt="">
     <div id="zona-cronometro">
         <div class="caja">
             <img src="assets/images/caja_cronometro.png" alt="">
@@ -286,15 +233,19 @@ body:hover #btn-fullscreen { opacity: 1; }
         <span id="lbl-goles-visitante" class="gol-numero">0</span>
     </div>
     <div id="zona-goleadores-local">
-        <div class="caja">
-            <img src="assets/images/caja_goleador_local.png" alt="">
-            <div id="lista-goleadores-local"></div>
+        <div class="caja-goleadores">
+            <img class="fondo-caja" src="assets/images/caja_goleador_local.png" alt="">
+            <div class="goleadores-clip">
+                <div id="lista-goleadores-local" class="goleadores-contenido"></div>
+            </div>
         </div>
     </div>
     <div id="zona-goleadores-visitante">
-        <div class="caja">
-            <img src="assets/images/caja_goleador_visitante.png" alt="">
-            <div id="lista-goleadores-visitante"></div>
+        <div class="caja-goleadores">
+            <img class="fondo-caja" src="assets/images/caja_goleador_visitante.png" alt="">
+            <div class="goleadores-clip">
+                <div id="lista-goleadores-visitante" class="goleadores-contenido"></div>
+            </div>
         </div>
     </div>
     <div id="capa-video">
@@ -314,6 +265,7 @@ import { onEstadoActualizado, leerEstado, onComandoCrono, onConexionCambiada, so
 const SEPARADOR = '       ';
 const PANTALLA_KEY = 'marcador-pantalla-config';
 
+const fondoCover = document.getElementById('fondo-cover');
 const lienzo = document.getElementById('lienzo');
 const lblTiempo = document.getElementById('lbl-tiempo');
 const lblParte = document.getElementById('lbl-parte');
@@ -333,7 +285,7 @@ try {
 } catch (e) {}
 
 // ============================================================
-//  CRONÓMETRO LOCAL (calcula tiempo a partir de comandos)
+//  CRONÓMETRO LOCAL
 // ============================================================
 let comandoCrono = null;
 let displayInterval = null;
@@ -343,11 +295,8 @@ function calcularSegundos() {
     if (comandoCrono.accion === 'arrancar') {
         const elapsed = (Date.now() - comandoCrono.tsReferencia) / 1000;
         const c = comandoCrono.config;
-        if (c.esAscendente) {
-            return Math.min(Math.floor(comandoCrono.segundosEnPausa + elapsed), c.limiteMinutos * 60);
-        } else {
-            return Math.max(Math.floor(comandoCrono.segundosEnPausa - elapsed), 0);
-        }
+        if (c.esAscendente) return Math.min(Math.floor(comandoCrono.segundosEnPausa + elapsed), c.limiteMinutos * 60);
+        else return Math.max(Math.floor(comandoCrono.segundosEnPausa - elapsed), 0);
     }
     return comandoCrono.segundosEnPausa || 0;
 }
@@ -366,41 +315,39 @@ function aplicarComandoCrono(cmd) {
     if (!cmd) return;
     comandoCrono = cmd;
     if (displayInterval) { clearInterval(displayInterval); displayInterval = null; }
-
     refrescarReloj();
-    if (cmd.config) {
-        lblParte.textContent = (cmd.config.parteActual || 1) + 'ª PARTE';
-    }
-
-    if (cmd.accion === 'arrancar') {
-        displayInterval = setInterval(refrescarReloj, 1000);
-    }
+    if (cmd.config) lblParte.textContent = (cmd.config.parteActual || 1) + 'ª PARTE';
+    if (cmd.accion === 'arrancar') displayInterval = setInterval(refrescarReloj, 1000);
 }
 
 onComandoCrono(aplicarComandoCrono);
 
 // ============================================================
-//  ESCALADO RESPONSIVO
+//  ESCALADO: fondo cover + UI escala uniforme
 // ============================================================
 function actualizarEscala() {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const tieneConfig = pantallaConfig && (pantallaConfig.ancho > 0 || pantallaConfig.alto > 0);
 
-    if (tieneConfig) {
-        const areaX = pantallaConfig.offsetX || 0;
-        const areaY = pantallaConfig.offsetY || 0;
-        const areaW = pantallaConfig.ancho > 0 ? pantallaConfig.ancho : vw;
-        const areaH = pantallaConfig.alto > 0 ? pantallaConfig.alto : vh;
-        lienzo.style.transform = `scale(${areaW / 1920}, ${areaH / 1080})`;
-        lienzo.style.left = areaX + 'px';
-        lienzo.style.top = areaY + 'px';
-    } else {
-        const factor = Math.min(vw / 1920, vh / 1080);
-        lienzo.style.transform = `scale(${factor})`;
-        lienzo.style.left = ((vw - 1920 * factor) / 2) + 'px';
-        lienzo.style.top = ((vh - 1080 * factor) / 2) + 'px';
+    let areaX = 0, areaY = 0, areaW = vw, areaH = vh;
+    if (pantallaConfig && (pantallaConfig.ancho > 0 || pantallaConfig.alto > 0)) {
+        areaX = pantallaConfig.offsetX || 0;
+        areaY = pantallaConfig.offsetY || 0;
+        if (pantallaConfig.ancho > 0) areaW = pantallaConfig.ancho;
+        if (pantallaConfig.alto > 0) areaH = pantallaConfig.alto;
     }
+
+    fondoCover.style.left = areaX + 'px';
+    fondoCover.style.top = areaY + 'px';
+    fondoCover.style.width = areaW + 'px';
+    fondoCover.style.height = areaH + 'px';
+
+    const factor = Math.min(areaW / 1920, areaH / 1080);
+    const scaledW = 1920 * factor;
+    const scaledH = 1080 * factor;
+    lienzo.style.transform = `scale(${factor})`;
+    lienzo.style.left = (areaX + (areaW - scaledW) / 2) + 'px';
+    lienzo.style.top = (areaY + (areaH - scaledH) / 2) + 'px';
 }
 
 window.addEventListener('resize', actualizarEscala);
@@ -420,14 +367,83 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ============================================================
-//  RENDERIZADO (estado = todo menos cronómetro)
+//  ESCUDOS: desplazar cuando marcador >= 10
+// ============================================================
+function actualizarEscudos(golesL, golesV) {
+    if (golesL >= 10 || golesV >= 10) lienzo.classList.add('decena');
+    else lienzo.classList.remove('decena');
+}
+
+// ============================================================
+//  GOLEADORES: auto-scroll continuo
+// ============================================================
+const scrollAnims = {};
+
+function gestionarScrollGoleadores(clipEl, listaEl, id) {
+    if (scrollAnims[id]) {
+        cancelAnimationFrame(scrollAnims[id].raf);
+        clearTimeout(scrollAnims[id].timer);
+        delete scrollAnims[id];
+    }
+    listaEl.style.transform = 'translateY(0)';
+
+    requestAnimationFrame(() => { requestAnimationFrame(() => {
+        const clipH = clipEl.clientHeight;
+        const listaH = listaEl.scrollHeight;
+        console.log(`[scroll ${id}] clipH=${clipH} listaH=${listaH} overflow=${listaH - clipH}`);
+        if (listaH <= clipH) return;
+
+        const overflow = listaH - clipH;
+        const speed = 30;
+        const pausa = 8000;
+        const st = { y: 0, dir: 1, raf: 0, timer: 0, last: 0 };
+        scrollAnims[id] = st;
+
+        function tick(now) {
+            if (!st.last) st.last = now;
+            const dt = (now - st.last) / 1000;
+            st.last = now;
+
+            st.y += speed * dt * st.dir;
+
+            if (st.dir === 1 && st.y >= overflow) {
+                st.y = overflow;
+                listaEl.style.transform = `translateY(${-st.y}px)`;
+                st.dir = -1;
+                st.last = 0;
+                st.timer = setTimeout(() => { st.raf = requestAnimationFrame(tick); }, pausa);
+                return;
+            }
+            if (st.dir === -1 && st.y <= 0) {
+                st.y = 0;
+                listaEl.style.transform = 'translateY(0)';
+                st.dir = 1;
+                st.last = 0;
+                st.timer = setTimeout(() => { st.raf = requestAnimationFrame(tick); }, pausa);
+                return;
+            }
+
+            listaEl.style.transform = `translateY(${-st.y}px)`;
+            st.raf = requestAnimationFrame(tick);
+        }
+
+        st.timer = setTimeout(() => { st.raf = requestAnimationFrame(tick); }, pausa);
+    }); });
+}
+
+// ============================================================
+//  RENDERIZADO
 // ============================================================
 function renderizar(estado) {
     if (!estado) return;
 
-    lblGolesLocal.textContent = estado.golesLocal ?? 0;
-    lblGolesVisitante.textContent = estado.golesVisitante ?? 0;
+    const golesL = estado.golesLocal ?? 0;
+    const golesV = estado.golesVisitante ?? 0;
+    lblGolesLocal.textContent = golesL;
+    lblGolesVisitante.textContent = golesV;
     if (estado.parte) lblParte.textContent = estado.parte;
+
+    actualizarEscudos(golesL, golesV);
 
     renderizarGoleadores(listaLocal, estado.goleadoresLocal || [], 'local');
     renderizarGoleadores(listaVisitante, estado.goleadoresVisitante || [], 'visitante');
@@ -463,6 +479,9 @@ function renderizarGoleadores(contenedor, lista, lado) {
             : minutos + SEPARADOR + entry.nombre;
         contenedor.appendChild(div);
     });
+
+    const clipEl = contenedor.parentElement;
+    gestionarScrollGoleadores(clipEl, contenedor, lado);
 }
 
 // ============================================================
