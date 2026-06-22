@@ -266,51 +266,37 @@ body:hover #btn-fullscreen { opacity: 1; }
 
 <div id="lienzo">
     <img id="fondo" src="assets/images/fondo.png" alt="">
-
-    <!-- Cronómetro -->
     <div id="zona-cronometro">
         <div class="caja">
             <img src="assets/images/caja_cronometro.png" alt="">
             <span id="lbl-tiempo">00:00</span>
         </div>
     </div>
-
-    <!-- Parte -->
     <div id="zona-parte">
         <div class="caja">
             <img src="assets/images/caja_parte.png" alt="">
             <span id="lbl-parte">1ª PARTE</span>
         </div>
     </div>
-
-    <!-- Escudos -->
     <img id="escudo-local" src="assets/images/escudo_local.png" alt="">
     <img id="escudo-visitante" src="assets/images/escudo_visitante.png" alt="">
-
-    <!-- Marcador central -->
     <div id="zona-marcador">
         <span id="lbl-goles-local" class="gol-numero">0</span>
         <span class="gol-separador">-</span>
         <span id="lbl-goles-visitante" class="gol-numero">0</span>
     </div>
-
-    <!-- Goleadores Local -->
     <div id="zona-goleadores-local">
         <div class="caja">
             <img src="assets/images/caja_goleador_local.png" alt="">
             <div id="lista-goleadores-local"></div>
         </div>
     </div>
-
-    <!-- Goleadores Visitante -->
     <div id="zona-goleadores-visitante">
         <div class="caja">
             <img src="assets/images/caja_goleador_visitante.png" alt="">
             <div id="lista-goleadores-visitante"></div>
         </div>
     </div>
-
-    <!-- Capa de vídeo -->
     <div id="capa-video">
         <video id="video-gol" playsinline></video>
     </div>
@@ -323,7 +309,7 @@ body:hover #btn-fullscreen { opacity: 1; }
 <button id="btn-fullscreen" title="Pantalla completa (F)">&#x26F6;</button>
 
 <script type="module">
-import { onEstadoActualizado, leerEstado, onConexionCambiada, solicitarEstado } from './sync.js';
+import { onEstadoActualizado, leerEstado, onComandoCrono, onConexionCambiada, solicitarEstado } from './sync.js';
 
 const SEPARADOR = '       ';
 const PANTALLA_KEY = 'marcador-pantalla-config';
@@ -341,11 +327,57 @@ const videoEl = document.getElementById('video-gol');
 let ultimoVideoTs = 0;
 let pantallaConfig = null;
 
-// --- ZONA SEGURA: cargar config persistida ---
 try {
     const guardada = localStorage.getItem(PANTALLA_KEY);
     if (guardada) pantallaConfig = JSON.parse(guardada);
 } catch (e) {}
+
+// ============================================================
+//  CRONÓMETRO LOCAL (calcula tiempo a partir de comandos)
+// ============================================================
+let comandoCrono = null;
+let displayInterval = null;
+
+function calcularSegundos() {
+    if (!comandoCrono) return 0;
+    if (comandoCrono.accion === 'arrancar') {
+        const elapsed = (Date.now() - comandoCrono.tsReferencia) / 1000;
+        const c = comandoCrono.config;
+        if (c.esAscendente) {
+            return Math.min(Math.floor(comandoCrono.segundosEnPausa + elapsed), c.limiteMinutos * 60);
+        } else {
+            return Math.max(Math.floor(comandoCrono.segundosEnPausa - elapsed), 0);
+        }
+    }
+    return comandoCrono.segundosEnPausa || 0;
+}
+
+function formatoTiempo(segs) {
+    const m = Math.floor(segs / 60);
+    const s = segs % 60;
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+function refrescarReloj() {
+    lblTiempo.textContent = formatoTiempo(calcularSegundos());
+}
+
+function aplicarComandoCrono(cmd) {
+    if (!cmd) return;
+    comandoCrono = cmd;
+    if (displayInterval) { clearInterval(displayInterval); displayInterval = null; }
+
+    refrescarReloj();
+    if (cmd.config) {
+        lblParte.textContent = (cmd.config.parteActual || 1) + 'ª PARTE';
+    }
+
+    if (cmd.accion === 'arrancar') {
+        displayInterval = setInterval(refrescarReloj, 1000);
+    }
+}
+
+onComandoCrono(aplicarComandoCrono);
 
 // ============================================================
 //  ESCALADO RESPONSIVO
@@ -353,7 +385,6 @@ try {
 function actualizarEscala() {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-
     const tieneConfig = pantallaConfig && (pantallaConfig.ancho > 0 || pantallaConfig.alto > 0);
 
     if (tieneConfig) {
@@ -361,20 +392,14 @@ function actualizarEscala() {
         const areaY = pantallaConfig.offsetY || 0;
         const areaW = pantallaConfig.ancho > 0 ? pantallaConfig.ancho : vw;
         const areaH = pantallaConfig.alto > 0 ? pantallaConfig.alto : vh;
-        const scaleX = areaW / 1920;
-        const scaleY = areaH / 1080;
-
-        lienzo.style.transform = `scale(${scaleX}, ${scaleY})`;
+        lienzo.style.transform = `scale(${areaW / 1920}, ${areaH / 1080})`;
         lienzo.style.left = areaX + 'px';
         lienzo.style.top = areaY + 'px';
     } else {
         const factor = Math.min(vw / 1920, vh / 1080);
-        const scaledW = 1920 * factor;
-        const scaledH = 1080 * factor;
-
         lienzo.style.transform = `scale(${factor})`;
-        lienzo.style.left = ((vw - scaledW) / 2) + 'px';
-        lienzo.style.top = ((vh - scaledH) / 2) + 'px';
+        lienzo.style.left = ((vw - 1920 * factor) / 2) + 'px';
+        lienzo.style.top = ((vh - 1080 * factor) / 2) + 'px';
     }
 }
 
@@ -386,57 +411,44 @@ actualizarEscala();
 //  PANTALLA COMPLETA
 // ============================================================
 function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
-    } else {
-        document.exitFullscreen().catch(() => {});
-    }
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+    else document.exitFullscreen().catch(() => {});
 }
-
 document.getElementById('btn-fullscreen').addEventListener('click', toggleFullscreen);
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'f' || e.key === 'F') {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-        toggleFullscreen();
-    }
+    if ((e.key === 'f' || e.key === 'F') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') toggleFullscreen();
 });
 
 // ============================================================
-//  RENDERIZADO
+//  RENDERIZADO (estado = todo menos cronómetro)
 // ============================================================
 function renderizar(estado) {
     if (!estado) return;
 
-    lblTiempo.textContent = estado.tiempo || '00:00';
-    lblParte.textContent = estado.parte || '1ª PARTE';
     lblGolesLocal.textContent = estado.golesLocal ?? 0;
     lblGolesVisitante.textContent = estado.golesVisitante ?? 0;
+    if (estado.parte) lblParte.textContent = estado.parte;
 
     renderizarGoleadores(listaLocal, estado.goleadoresLocal || [], 'local');
     renderizarGoleadores(listaVisitante, estado.goleadoresVisitante || [], 'visitante');
 
-    // Color del marcador
     const color = estado.colorMarcador || 'white';
     document.querySelectorAll('.gol-numero, .gol-separador').forEach(el => el.style.color = color);
 
-    // Video
     if (estado.videoEvento && estado.videoEvento.ts > ultimoVideoTs) {
         ultimoVideoTs = estado.videoEvento.ts;
-        if (estado.videoEvento.url) {
-            reproducirVideo(estado.videoEvento.url);
-        } else {
-            detenerVideo();
-        }
+        if (estado.videoEvento.url) reproducirVideo(estado.videoEvento.url);
+        else detenerVideo();
     }
 
-    // Zona segura sincronizada desde panel
     if (estado.pantalla) {
         pantallaConfig = estado.pantalla;
         localStorage.setItem(PANTALLA_KEY, JSON.stringify(pantallaConfig));
         actualizarEscala();
     }
 
-    // Precarga de vídeos de celebración
+    if (estado.comandoCrono) aplicarComandoCrono(estado.comandoCrono);
+
     precargarVideos(estado.videosPrecargar);
 }
 
@@ -446,11 +458,9 @@ function renderizarGoleadores(contenedor, lista, lado) {
         const div = document.createElement('div');
         div.className = 'goleador';
         const minutos = entry.minutos.join(' ');
-        if (lado === 'local') {
-            div.textContent = entry.nombre + SEPARADOR + minutos;
-        } else {
-            div.textContent = minutos + SEPARADOR + entry.nombre;
-        }
+        div.textContent = lado === 'local'
+            ? entry.nombre + SEPARADOR + minutos
+            : minutos + SEPARADOR + entry.nombre;
         contenedor.appendChild(div);
     });
 }
@@ -462,53 +472,36 @@ let fadeTimeout = null;
 
 function reproducirVideo(url) {
     if (fadeTimeout) { clearTimeout(fadeTimeout); fadeTimeout = null; }
-
     videoEl.src = url;
     capaVideo.style.display = 'block';
     capaVideo.style.opacity = '0';
     capaVideo.style.transition = 'opacity 0.5s ease';
-
     videoEl.load();
-    videoEl.play().then(() => {
-        capaVideo.style.opacity = '1';
-    }).catch(() => {
-        capaVideo.style.display = 'none';
-    });
-
+    videoEl.play().then(() => { capaVideo.style.opacity = '1'; }).catch(() => { capaVideo.style.display = 'none'; });
     videoEl.onended = () => {
         capaVideo.style.transition = 'opacity 0.8s ease';
         capaVideo.style.opacity = '0';
-        fadeTimeout = setTimeout(() => {
-            capaVideo.style.display = 'none';
-            videoEl.src = '';
-        }, 800);
+        fadeTimeout = setTimeout(() => { capaVideo.style.display = 'none'; videoEl.src = ''; }, 800);
     };
 }
 
 function detenerVideo() {
     if (fadeTimeout) { clearTimeout(fadeTimeout); fadeTimeout = null; }
-    videoEl.pause();
-    videoEl.src = '';
-    capaVideo.style.transition = 'none';
-    capaVideo.style.opacity = '0';
-    capaVideo.style.display = 'none';
+    videoEl.pause(); videoEl.src = '';
+    capaVideo.style.transition = 'none'; capaVideo.style.opacity = '0'; capaVideo.style.display = 'none';
 }
 
 // ============================================================
 //  PRECARGA DE VÍDEOS
 // ============================================================
 const videosPrecargados = new Set();
-
 function precargarVideos(urls) {
     if (!urls) return;
     urls.forEach(url => {
         if (videosPrecargados.has(url)) return;
         videosPrecargados.add(url);
         const el = document.createElement('video');
-        el.preload = 'auto';
-        el.muted = true;
-        el.src = url;
-        el.load();
+        el.preload = 'auto'; el.muted = true; el.src = url; el.load();
     });
 }
 
@@ -517,22 +510,14 @@ function precargarVideos(urls) {
 // ============================================================
 const indicador = document.getElementById('indicador-conexion');
 const indicadorTexto = indicador.querySelector('.texto');
-
-onConexionCambiada((estado) => {
-    if (estado === 'connected') {
+onConexionCambiada((st) => {
+    if (st === 'connected') {
         indicador.classList.add('conectado');
         indicadorTexto.textContent = 'Conectado';
         solicitarEstado();
     } else {
         indicador.classList.remove('conectado');
-        const textos = {
-            connecting: 'Conectando...',
-            disconnected: 'Desconectado',
-            suspended: 'Suspendido',
-            closed: 'Cerrado',
-            failed: 'Error'
-        };
-        indicadorTexto.textContent = textos[estado] || estado;
+        indicadorTexto.textContent = ({ connecting:'Conectando...', disconnected:'Desconectado', suspended:'Suspendido', closed:'Cerrado', failed:'Error' })[st] || st;
     }
 });
 
