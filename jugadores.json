@@ -25,7 +25,7 @@
       "nombreCorto": "MARCOS",
       "nombreCompleto": "Marcos",
       "equipo": "SIN_ASIGNAR",
-      "videoCelebracion": null
+      "videoCelebracion": "https://res.cloudinary.com/dnd3g3zgm/video/upload/v1782219558/GOL_arxkzt.mp4"
     },
     {
       "nombreCorto": "JUNQUERA",
@@ -36,6 +36,78 @@
     {
       "nombreCorto": "PABLO",
       "nombreCompleto": "Pablín",
+      "equipo": "SIN_ASIGNAR",
+      "videoCelebracion": null
+    },
+    {
+      "nombreCorto": "ALBERTO",
+      "nombreCompleto": "Alberto",
+      "equipo": "SIN_ASIGNAR",
+      "videoCelebracion": null
+    },
+    {
+      "nombreCorto": "CASAS",
+      "nombreCompleto": "Pelayo",
+      "equipo": "SIN_ASIGNAR",
+      "videoCelebracion": null
+    },
+    {
+      "nombreCorto": "DAVID",
+      "nombreCompleto": "David",
+      "equipo": "SIN_ASIGNAR",
+      "videoCelebracion": null
+    },
+    {
+      "nombreCorto": "ENZO",
+      "nombreCompleto": "Enzo",
+      "equipo": "SIN_ASIGNAR",
+      "videoCelebracion": null
+    },
+    {
+      "nombreCorto": "FERNANDO",
+      "nombreCompleto": "Fernando",
+      "equipo": "SIN_ASIGNAR",
+      "videoCelebracion": null
+    },
+    {
+      "nombreCorto": "GONZALO",
+      "nombreCompleto": "Gonzalo",
+      "equipo": "SIN_ASIGNAR",
+      "videoCelebracion": null
+    },
+    {
+      "nombreCorto": "JAVI",
+      "nombreCompleto": "Javi",
+      "equipo": "SIN_ASIGNAR",
+      "videoCelebracion": null
+    },
+    {
+      "nombreCorto": "JORGE",
+      "nombreCompleto": "Jorge",
+      "equipo": "SIN_ASIGNAR",
+      "videoCelebracion": null
+    },
+    {
+      "nombreCorto": "MATEO",
+      "nombreCompleto": "Mateo",
+      "equipo": "SIN_ASIGNAR",
+      "videoCelebracion": null
+    },
+    {
+      "nombreCorto": "NACHO",
+      "nombreCompleto": "Nacho",
+      "equipo": "SIN_ASIGNAR",
+      "videoCelebracion": null
+    },
+    {
+      "nombreCorto": "NICO",
+      "nombreCompleto": "Nico",
+      "equipo": "SIN_ASIGNAR",
+      "videoCelebracion": null
+    },
+    {
+      "nombreCorto": "PUEBLA",
+      "nombreCompleto": "Puebla",
       "equipo": "SIN_ASIGNAR",
       "videoCelebracion": null
     }
